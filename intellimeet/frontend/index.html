@@ -704,7 +704,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,.vtile:focus-vis
    with no server running.
    ========================================================================= */
 
-const API_BASE = '/api';
+// Sahi ✅
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 let DEMO_MODE = false;          // true once we decide to run without a backend
 let socket = null;
 let authToken = localStorage.getItem('im_token') || null;
