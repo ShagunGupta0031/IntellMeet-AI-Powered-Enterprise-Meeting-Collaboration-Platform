@@ -18,10 +18,24 @@ const app = express();
 // uses inline <script>/<style> tags and a CDN font import. If you split the frontend
 // out to its own host/CDN in production, re-enable a strict CSP here.
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+
+const allowedOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
