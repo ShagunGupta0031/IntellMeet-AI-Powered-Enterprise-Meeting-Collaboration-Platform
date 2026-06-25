@@ -18,7 +18,6 @@ const app = express();
 // uses inline <script>/<style> tags and a CDN font import. If you split the frontend
 // out to its own host/CDN in production, re-enable a strict CSP here.
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(
 app.use(cors({
   origin: true,
   credentials: true,
