@@ -19,10 +19,14 @@ const app = express();
 // out to its own host/CDN in production, re-enable a strict CSP here.
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(
-  cors({
-    origin: process.env.CLIENT_URL || '*',
-    credentials: true,
-  })
+ app.use(cors({
+  origin: [
+    'https://intell-meet-ai-powered-enterprise-m.vercel.app',
+    'https://intellimeet-ai-powered-enterprise-m.vercel.app',
+    '*'
+  ],
+  credentials: true,
+}));
 );
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
