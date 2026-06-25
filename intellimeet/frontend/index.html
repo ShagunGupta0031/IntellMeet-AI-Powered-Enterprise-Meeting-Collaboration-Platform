@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IntelliMeet — AI Enterprise Meeting Platform</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#07090F;--s1:#0D1018;--s2:#131722;--s3:#1A2030;
+  --b1:#1F2840;--b2:#263350;--b3:#314070;
+  --acc:#6366F1;--acc2:#8B5CF6;--acc3:#06B6D4;
+  --grn:#10B981;--amb:#F59E0B;--red:#EF4444;--pnk:#EC4899;
+  --t1:#F0F2FF;--t2:#A8B4D0;--t3:#5A6680;
+  --mono:'JetBrains Mono',monospace;--r:10px;
+  --sg-grad:linear-gradient(135deg,#6366F1,#8B5CF6);
+  --ar-grad:linear-gradient(135deg,#10B981,#0D9488);
+  --pm-grad:linear-gradient(135deg,#F59E0B,#EF4444);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;}
+
+button:focus-visible,input:focus-visible,textarea:focus-visible,.vtile:focus-visible,.slot:focus-visible,.achk:focus-visible,.kw:focus-visible{outline:2px solid var(--acc3);outline-offset:2px;}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
+
+.topbar{height:52px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 20px;gap:0;position:relative;z-index:50;}
+.logo{font-size:15px;font-weight:700;letter-spacing:-0.5px;}
+.logo em{color:var(--acc);font-style:normal;}
+.nav-items{display:flex;margin-left:24px;gap:2px;}
+.nav-item{padding:5px 13px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--t3);transition:all .15s;}
+.nav-item:hover{background:var(--s3);color:var(--t1);}
+.nav-item.active{background:rgba(99,102,241,.15);color:var(--acc);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;color:var(--red);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:lpulse 1.4s infinite;}
+@keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.room-tag{font-family:var(--mono);font-size:11px;color:var(--t3);background:var(--s3);padding:3px 10px;border-radius:6px;border:1px solid var(--b1);}
+.timer-tag{font-family:var(--mono);font-size:11px;color:var(--amb);background:rgba(245,158,11,.08);padding:3px 10px;border-radius:6px;border:1px solid rgba(245,158,11,.2);}
+.avatar-sm{width:28px;height:28px;border-radius:50%;background:var(--sg-grad);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;}
+.conn-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono);padding:3px 9px;border-radius:20px;border:1px solid var(--b1);color:var(--t3);}
+.conn-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);}
+.conn-pill.online .conn-dot{background:var(--grn);}
+.conn-pill.online{color:var(--grn);border-color:rgba(16,185,129,.3);}
+.conn-pill.offline .conn-dot{background:var(--red);}
+.conn-pill.offline{color:var(--red);border-color:rgba(239,68,68,.3);}
+
+.page{display:none;height:calc(100vh - 52px);}
+.page.active{display:flex;}
+#p-meeting{flex-direction:row;overflow:hidden;}
+.meet-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+
+.vgrid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px;overflow:hidden;}
+.vtile{background:var(--s2);border-radius:12px;border:1.5px solid var(--b1);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,box-shadow .2s;flex-direction:column;gap:6px;}
+.vtile:hover{border-color:var(--b3);}
+.vtile.speak{border-color:var(--grn);box-shadow:0 0 0 2px rgba(16,185,129,.2);}
+.vtile.pin{border-color:var(--acc);box-shadow:0 0 0 2px rgba(99,102,241,.25);}
+.v-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 60% 30%,rgba(99,102,241,.07),transparent 70%);}
+.v-av{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff;position:relative;z-index:1;}
+.v-name{position:absolute;bottom:8px;left:8px;font-size:11px;font-weight:600;background:rgba(0,0,0,.7);padding:3px 8px;border-radius:5px;display:flex;align-items:center;gap:5px;backdrop-filter:blur(4px);}
+.spk-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:lpulse 1s infinite;}
+.mute-chip{position:absolute;top:7px;right:7px;background:rgba(239,68,68,.85);font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;}
+.pin-hover{position:absolute;inset:0;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:11px;color:var(--acc);font-weight:600;}
+.vtile:hover .pin-hover{opacity:1;}
+.vtile.pin .pin-hover{display:none;}
+.mood-chip{position:absolute;top:7px;left:8px;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;backdrop-filter:blur(4px);transition:all .5s;}
+.video-el{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;background:#000;}
+
+.trans-bar{background:var(--s1);border-top:1px solid var(--b1);padding:8px 14px;display:flex;gap:10px;align-items:center;min-height:52px;}
+.trans-live{font-family:var(--mono);font-size:10px;color:var(--acc);background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.2);padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.trans-txt{font-size:12px;color:var(--t1);flex:1;}
+.trans-txt b{color:var(--amb);}
+.wpm-tag{font-size:10px;color:var(--t3);font-family:var(--mono);white-space:nowrap;}
+
+.ctrls{background:var(--s1);border-top:1px solid var(--b1);padding:10px 14px;display:flex;align-items:center;gap:6px;justify-content:center;}
+.cb{width:42px;height:42px;border-radius:10px;border:1px solid var(--b1);background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--t2);transition:all .15s;position:relative;}
+.cb:hover{background:var(--s3);border-color:var(--b2);transform:translateY(-1px);}
+.cb:active{transform:scale(.93);}
+.cb.on{background:rgba(99,102,241,.15);border-color:rgba(99,102,241,.4);color:var(--acc);}
+.cb.rec{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);animation:recblink 2s infinite;}
+@keyframes recblink{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 5px rgba(239,68,68,0)}}
+.cb.danger{background:var(--red);border-color:var(--red);color:#fff;}
+.cb.danger:hover{background:#dc2626;}
+.cb-tip{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:99;}
+.cb:hover .cb-tip,.cb:focus-visible .cb-tip{opacity:1;}
+.csep{width:1px;height:26px;background:var(--b1);margin:0 2px;}
+.cb-badge{position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:var(--red);border-radius:50%;font-size:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;opacity:0;transition:opacity .2s;}
+.cb-badge.show{opacity:1;}
+
+.sidebar{width:330px;background:var(--s1);border-left:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;}
+.stabs{display:flex;border-bottom:1px solid var(--b1);}
+.stab{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;color:var(--t3);cursor:pointer;border:none;background:transparent;transition:all .15s;border-bottom:2px solid transparent;letter-spacing:.2px;}
+.stab.active{color:var(--acc);border-bottom-color:var(--acc);}
+.stab:hover:not(.active){color:var(--t1);}
+.spanel{display:none;flex:1;overflow-y:auto;padding:12px;}
+.spanel.active{display:block;}
+.spanel::-webkit-scrollbar{width:3px;}
+.spanel::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+
+.acard{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:11px;margin-bottom:10px;}
+.acard-hd{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;}
+.adot{width:5px;height:5px;border-radius:50%;background:var(--acc);}
+.adot.g{background:var(--grn);}
+.adot.a{background:var(--amb);}
+.adot.r{background:var(--red);}
+.acard p{font-size:12px;color:var(--t2);line-height:1.65;}
+.disclaimer{font-size:10px;color:var(--t3);line-height:1.5;margin-top:4px;}
+
+.coach-tip{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));border:1px solid rgba(99,102,241,.3);border-radius:10px;padding:11px;margin-bottom:8px;position:relative;overflow:hidden;}
+.coach-tip::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--acc),var(--acc2));}
+.coach-tip-hd{font-size:10px;font-weight:700;color:var(--acc);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+.coach-tip-body{font-size:12px;color:var(--t2);line-height:1.6;}
+.coach-score{display:flex;gap:8px;margin-bottom:10px;}
+.cscore{flex:1;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:8px;text-align:center;}
+.cscore-val{font-size:20px;font-weight:700;}
+.cscore-lbl{font-size:10px;color:var(--t3);margin-top:2px;}
+
+.talk-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.talk-name{font-size:11px;font-weight:600;width:52px;flex-shrink:0;}
+.talk-bar-bg{flex:1;height:8px;background:var(--b1);border-radius:4px;overflow:hidden;}
+.talk-bar-fill{height:100%;border-radius:4px;transition:width 1s;}
+.talk-pct{font-size:10px;color:var(--t3);font-family:var(--mono);width:30px;text-align:right;}
+
+.mood-graph{width:100%;height:60px;position:relative;overflow:hidden;}
+.mg-label{font-size:9px;color:var(--t3);margin-top:2px;display:flex;justify-content:space-between;}
+
+.intlog{display:flex;flex-direction:column;gap:5px;max-height:100px;overflow-y:auto;}
+.intlog::-webkit-scrollbar{width:2px;}
+.intlog-item{display:flex;align-items:center;gap:7px;font-size:11px;padding:4px 7px;background:var(--s2);border-radius:6px;border:1px solid var(--b1);}
+.int-who{font-weight:700;color:var(--red);}
+.int-meta{color:var(--t3);font-size:10px;margin-left:auto;}
+
+.report-section{background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:12px;margin-bottom:10px;}
+.report-section h4{font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.mini-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px;}
+.mini-bar-bg{flex:1;height:6px;background:var(--b1);border-radius:3px;overflow:hidden;}
+.mini-bar-fill{height:100%;border-radius:3px;transition:width .6s;}
+
+.atask{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--b1);}
+.atask:last-child{border-bottom:none;}
+.achk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--t3);flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;transition:all .2s;background:transparent;}
+.achk:hover{border-color:var(--acc);}
+.achk.done{background:var(--grn);border-color:var(--grn);}
+.atxt{font-size:12px;transition:all .2s;}
+.atxt.done{text-decoration:line-through;color:var(--t3);}
+.ameta{font-size:10px;color:var(--t3);margin-top:2px;}
+
+.irow{display:flex;gap:6px;margin-bottom:8px;}
+.inp{flex:1;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:7px 11px;color:var(--t1);font-size:12px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:rgba(99,102,241,.5);}
+.inp::placeholder{color:var(--t3);}
+.btn{padding:7px 13px;background:var(--acc);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:hover{background:#5558e0;transform:translateY(-1px);}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+.btn.ghost{background:var(--s3);border:1px solid var(--b1);color:var(--t2);}
+.btn.ghost:hover{background:var(--b1);color:var(--t1);}
+.btn.danger{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+.ai-box{background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(139,92,246,.07));border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:11px;font-size:12px;line-height:1.7;color:var(--t2);min-height:56px;}
+.thinking-dots::after{content:'...';animation:dots 1.5s infinite;}
+@keyframes dots{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
+
+.sentiment-bar{display:flex;gap:3px;height:6px;border-radius:4px;overflow:hidden;margin-top:8px;}
+.sb-pos{background:var(--grn);transition:flex .5s;}
+.sb-neu{background:var(--b2);transition:flex .5s;}
+.sb-neg{background:var(--red);transition:flex .5s;}
+.sent-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-top:4px;}
+
+.kw-cloud{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;}
+.kw{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;transition:opacity .2s;border:none;}
+.kw:hover{opacity:.75;}
+
+.tscroll{max-height:180px;overflow-y:auto;}
+.tscroll::-webkit-scrollbar{width:3px;}
+.tscroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+.tent{padding:5px 0;border-bottom:1px solid var(--b1);font-size:11px;line-height:1.5;}
+.tent:last-child{border-bottom:none;}
+.tent .who{font-weight:700;color:var(--acc);}
+.tent .ts{color:var(--t3);float:right;font-family:var(--mono);}
+
+.chatbox{display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;margin-bottom:10px;}
+.chatbox::-webkit-scrollbar{width:3px;}
+.chatbox::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+.bubble{border-radius:10px;padding:8px 10px;font-size:12px;max-width:92%;}
+.bubble.them{background:var(--s2);border-radius:10px 10px 10px 2px;}
+.bubble.me{background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.2);border-radius:10px 10px 2px 10px;margin-left:auto;}
+.bubble.ai{background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);}
+.bubble .bm{font-size:10px;color:var(--t3);margin-bottom:3px;}
+
+.person{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b1);}
+.person:last-child{border-bottom:none;}
+.p-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#fff;}
+.p-nm{font-size:12px;font-weight:600;}
+.p-rl{font-size:10px;color:var(--t3);}
+.pbadge{margin-left:auto;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;}
+.pbadge.host{background:rgba(99,102,241,.15);color:var(--acc);}
+.pbadge.spk{background:rgba(16,185,129,.12);color:var(--grn);}
+.pbadge.mut{background:rgba(90,102,128,.12);color:var(--t3);}
+.vol-bar{width:40px;height:4px;background:var(--b1);border-radius:2px;overflow:hidden;margin-top:4px;}
+.vol-fill{height:100%;background:var(--grn);border-radius:2px;transition:width .3s;}
+
+.slot{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.slot:hover{border-color:rgba(99,102,241,.4);transform:translateY(-1px);}
+.slot.sel{border-color:var(--acc);background:rgba(99,102,241,.08);}
+.slot-t{font-family:var(--mono);font-size:11px;color:var(--acc);margin-bottom:3px;}
+.slot-l{font-size:12px;font-weight:600;}
+.slot-a{font-size:10px;color:var(--grn);margin-top:2px;}
+
+.stitle{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;}
+.a-row{display:flex;gap:6px;margin-bottom:10px;}
+.a-stat{flex:1;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:8px 10px;text-align:center;}
+.a-val{font-size:18px;font-weight:700;line-height:1;}
+.a-lbl{font-size:10px;color:var(--t3);margin-top:3px;}
+.waveform{display:flex;align-items:center;gap:2px;height:24px;}
+.wb{width:3px;border-radius:2px;background:var(--acc);animation:wave var(--d,.5s) ease-in-out infinite alternate;}
+.wb.off{animation:none;height:3px;background:var(--b2);}
+@keyframes wave{from{height:3px}to{height:20px}}
+
+#p-dash{flex-direction:column;overflow-y:auto;padding:28px 32px;}
+.dash-head{margin-bottom:24px;}
+.dash-head h1{font-size:20px;font-weight:700;margin-bottom:4px;}
+.dash-head p{color:var(--t3);font-size:13px;}
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.dstat{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:16px;}
+.dstat-val{font-size:26px;font-weight:700;margin-bottom:2px;}
+.dstat-lbl{font-size:11px;color:var(--t3);}
+.dstat-sub{font-size:11px;margin-top:6px;}
+.mtable{background:var(--s1);border:1px solid var(--b1);border-radius:12px;overflow:hidden;}
+.mtable-h{padding:14px 16px;border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center;}
+.mrow{padding:12px 16px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s;}
+.mrow:last-child{border-bottom:none;}
+.mrow:hover{background:var(--s2);}
+.mrow-icon{width:36px;height:36px;border-radius:8px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.mtag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;}
+.mtag.done{background:rgba(16,185,129,.12);color:var(--grn);}
+.mtag.pend{background:rgba(245,158,11,.1);color:var(--amb);}
+
+#p-hist{flex-direction:column;overflow-y:auto;padding:28px 32px;}
+.about-line{font-size:11px;color:var(--t3);margin-top:18px;border-top:1px solid var(--b1);padding-top:14px;line-height:1.7;}
+
+.note-saved-badge{font-size:10px;color:var(--grn);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);padding:2px 8px;border-radius:4px;display:none;}
+.note-saved-badge.show{display:inline;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s2);border:1px solid var(--b1);color:var(--t1);padding:9px 18px;border-radius:8px;font-size:12px;font-weight:500;z-index:999;opacity:0;transition:all .25s;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{background:var(--s2);border:1px solid var(--b2);border-radius:16px;padding:24px;width:400px;transform:scale(.95);transition:transform .2s;max-height:85vh;overflow-y:auto;}
+.modal-overlay.show .modal{transform:scale(1);}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:6px;}
+.modal p{font-size:12px;color:var(--t3);margin-bottom:16px;line-height:1.6;}
+
+.focus-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:150;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.focus-overlay.show{display:flex;}
+.focus-timer{font-size:72px;font-weight:700;font-family:var(--mono);color:var(--t1);}
+.focus-label{font-size:14px;color:var(--t3);}
+
+.reaction-float{position:fixed;font-size:28px;pointer-events:none;animation:rfloat 2.5s ease-out forwards;z-index:300;}
+@keyframes rfloat{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-150px) scale(1.4);opacity:0}}
+
+.heatmap{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-top:6px;}
+.hm-cell{aspect-ratio:1;border-radius:3px;transition:opacity .3s;border:none;padding:0;}
+.hm-cell:hover{opacity:.7;cursor:pointer;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+
+/* ---- AUTH OVERLAY ---- */
+.auth-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;}
+.auth-overlay.hide{display:none;}
+.auth-card{width:340px;background:var(--s1);border:1px solid var(--b1);border-radius:16px;padding:28px;}
+.auth-card h2{font-size:18px;margin-bottom:4px;}
+.auth-card p{font-size:12px;color:var(--t3);margin-bottom:18px;}
+.auth-tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--s2);border-radius:8px;padding:3px;}
+.auth-tab{flex:1;text-align:center;padding:6px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--t3);background:transparent;border:none;}
+.auth-tab.active{background:var(--acc);color:#fff;}
+.auth-field{margin-bottom:10px;}
+.auth-field label{font-size:11px;color:var(--t3);display:block;margin-bottom:4px;}
+.auth-err{color:var(--red);font-size:11px;margin-top:8px;min-height:14px;}
+.auth-hint{font-size:10px;color:var(--t3);margin-top:14px;line-height:1.6;border-top:1px solid var(--b1);padding-top:10px;}
+
+@media(max-width:860px){.sidebar{width:260px;}.vgrid{grid-template-columns:1fr;}}
+@media(max-width:640px){#p-meeting{flex-direction:column;}.sidebar{width:100%;border-left:none;border-top:1px solid var(--b1);max-height:46vh;}.nav-items{display:none;}}
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH OVERLAY ===== -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <h2>Intelli<em style="color:var(--acc);font-style:normal;">Meet</em></h2>
+    <p>Sign in to join the live meeting room.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="setAuthTab('login')">Log in</button>
+      <button class="auth-tab" id="tab-register" onclick="setAuthTab('register')">Register</button>
+    </div>
+    <div id="auth-fields-register" style="display:none;">
+      <div class="auth-field"><label>Name</label><input class="inp" style="width:100%;" id="reg-name" placeholder="Shagun Gupta"></div>
+      <div class="auth-field"><label>Title (optional)</label><input class="inp" style="width:100%;" id="reg-title" placeholder="Team Lead"></div>
+    </div>
+    <div class="auth-field"><label>Email</label><input class="inp" style="width:100%;" id="auth-email" placeholder="you@example.com" type="email"></div>
+    <div class="auth-field"><label>Password</label><input class="inp" style="width:100%;" id="auth-password" placeholder="••••••••" type="password"></div>
+    <button class="btn" style="width:100%;" id="auth-submit" onclick="submitAuth()">Log in</button>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-hint">Backend not running yet? You can still preview the UI — click "Continue in demo mode" below, which uses local simulated data exactly like the original prototype.</div>
+    <button class="btn ghost" style="width:100%;margin-top:8px;" onclick="continueDemoMode()">Continue in demo mode</button>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="logo">Intelli<em>Meet</em></div>
+  <nav class="nav-items">
+    <button class="nav-item active" onclick="goto('meeting',this)">Meeting</button>
+    <button class="nav-item" onclick="goto('dash',this)">Dashboard</button>
+    <button class="nav-item" onclick="goto('hist',this)">History</button>
+  </nav>
+  <div class="topbar-right">
+    <div class="conn-pill offline" id="conn-pill"><div class="conn-dot"></div><span id="conn-label">Offline / Demo</span></div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <div class="timer-tag" id="timer">00:00</div>
+    <div class="room-tag" id="room-tag">MTG-8472-XQ</div>
+    <div class="avatar-sm" id="my-avatar" title="Log out" onclick="logout()">SG</div>
+  </div>
+</header>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- LEAVE MODAL -->
+<div class="modal-overlay" id="leave-modal">
+  <div class="modal">
+    <h3>Leave this meeting?</h3>
+    <p>Your AI summary, transcript, and action items are saved automatically when you leave.</p>
+    <div style="display:flex;gap:8px;">
+      <button class="btn ghost" style="flex:1;" onclick="closeLeave()">Cancel</button>
+      <button class="btn danger" style="flex:1;" onclick="confirmLeave()">Leave meeting</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal" style="width:480px;">
+    <h3>📊 AI meeting report</h3>
+    <p>Auto-generated summary for this session</p>
+    <div class="report-section">
+      <h4>🗣 Talk time distribution</h4>
+      <div class="mini-bar-row"><span style="width:70px">Shagun</span><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:48%;background:var(--acc);"></div></div><span style="color:var(--t3);font-size:10px;width:30px">48%</span></div>
+      <div class="mini-bar-row"><span style="width:70px">Aditya</span><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:32%;background:var(--grn);"></div></div><span style="color:var(--t3);font-size:10px;width:30px">32%</span></div>
+      <div class="mini-bar-row"><span style="width:70px">Priya</span><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:20%;background:var(--pnk);"></div></div><span style="color:var(--t3);font-size:10px;width:30px">20%</span></div>
+    </div>
+    <div class="report-section">
+      <h4>😊 Sentiment over time</h4>
+      <div style="display:flex;gap:3px;align-items:flex-end;height:40px;">
+        <div style="flex:1;background:var(--grn);opacity:.7;border-radius:2px 2px 0 0;height:60%"></div>
+        <div style="flex:1;background:var(--grn);opacity:.7;border-radius:2px 2px 0 0;height:80%"></div>
+        <div style="flex:1;background:var(--amb);opacity:.7;border-radius:2px 2px 0 0;height:50%"></div>
+        <div style="flex:1;background:var(--grn);opacity:.7;border-radius:2px 2px 0 0;height:90%"></div>
+        <div style="flex:1;background:var(--grn);opacity:.7;border-radius:2px 2px 0 0;height:75%"></div>
+        <div style="flex:1;background:var(--grn);opacity:.7;border-radius:2px 2px 0 0;height:85%"></div>
+      </div>
+      <div style="font-size:10px;color:var(--t3);margin-top:4px;">Overall: 72% positive · 20% neutral · 8% negative</div>
+    </div>
+    <div class="report-section">
+      <h4>⚡ Key decisions made</h4>
+      <ul style="font-size:12px;color:var(--t2);padding-left:16px;line-height:2;">
+        <li>Claude API for AI summarization</li>
+        <li>WebRTC for video, Socket.IO for real-time sync</li>
+        <li>Vercel for deployment</li>
+        <li>Tailwind CSS for frontend styling</li>
+      </ul>
+    </div>
+    <div class="report-section">
+      <h4>🚨 Interruptions flagged: 4</h4>
+      <p style="font-size:11px;color:var(--t3);">Aditya · 2 times — Priya · 1 time — Shagun · 1 time</p>
+    </div>
+    <p class="disclaimer">Talk-time, sentiment, and interruption figures are estimated from speech timing and audio cues — not a precise transcript analysis. Use them as a conversation guide, not a performance score.</p>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="btn ghost" style="flex:1;" onclick="closeReport()">Close</button>
+      <button class="btn" style="flex:1;" onclick="toast('📄 Report downloaded as PDF');closeReport()">⬇ Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOCUS MODE -->
+<div class="focus-overlay" id="focus-overlay">
+  <div style="font-size:32px;">🎯</div>
+  <div class="focus-timer" id="focus-clock">05:00</div>
+  <div class="focus-label">Focus mode — mic and notifications paused</div>
+  <button class="btn ghost" onclick="endFocus()" style="margin-top:8px;">End focus</button>
+</div>
+
+<!-- MEETING PAGE -->
+<div class="page active" id="p-meeting">
+  <div class="meet-main">
+    <div class="vgrid" id="vgrid">
+      <div class="vtile speak" id="t-sg" tabindex="0" role="button" aria-label="Pin Shagun Gupta's video" onclick="pinTile(this,'Shagun Gupta')" onkeydown="if(event.key==='Enter')pinTile(this,'Shagun Gupta')">
+        <video class="video-el" id="video-local" autoplay playsinline muted style="display:none;"></video>
+        <div class="v-bg"></div>
+        <div class="mood-chip" id="mood-sg" style="background:rgba(16,185,129,.2);color:#34d399;">😊 Engaged</div>
+        <div class="v-av" id="av-sg" style="background:var(--sg-grad)">SG</div>
+        <div class="v-name"><div class="spk-dot"></div><span id="name-sg">Shagun Gupta (You)</span></div>
+        <div class="pin-hover">📌 Pin</div>
+      </div>
+      <div class="vtile" id="t-ar" tabindex="0" role="button" aria-label="Pin Aditya Rao's video" onclick="pinTile(this,'Aditya Rao')" onkeydown="if(event.key==='Enter')pinTile(this,'Aditya Rao')">
+        <div class="v-bg"></div>
+        <div class="mood-chip" id="mood-ar" style="background:rgba(245,158,11,.15);color:#fbbf24;">🤔 Thinking</div>
+        <div class="v-av" style="background:var(--ar-grad)">AR</div>
+        <div class="v-name">Aditya Rao</div>
+        <div class="mute-chip" id="ar-mute">MUTED</div>
+        <div class="pin-hover">📌 Pin</div>
+      </div>
+      <div class="vtile" id="t-pm" tabindex="0" role="button" aria-label="Pin Priya Mehta's video" onclick="pinTile(this,'Priya Mehta')" onkeydown="if(event.key==='Enter')pinTile(this,'Priya Mehta')">
+        <div class="v-bg"></div>
+        <div class="mood-chip" id="mood-pm" style="background:rgba(236,72,153,.12);color:#f472b6;">💡 Excited</div>
+        <div class="v-av" style="background:var(--pm-grad)">PM</div>
+        <div class="v-name">Priya Mehta</div>
+        <div class="pin-hover">📌 Pin</div>
+      </div>
+      <div class="vtile" style="border-style:dashed;cursor:pointer;" tabindex="0" role="button" aria-label="Invite a participant" onclick="inviteP()" onkeydown="if(event.key==='Enter')inviteP()">
+        <div style="text-align:center;color:var(--t3);">
+          <div style="font-size:22px;margin-bottom:5px;opacity:.4;">＋</div>
+          <div style="font-size:11px;font-weight:500;">Invite participant</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trans-bar">
+      <div class="trans-live">🎙 LIVE</div>
+      <div class="waveform" id="waveform" aria-hidden="true">
+        <div class="wb" style="--d:.4s"></div><div class="wb" style="--d:.6s"></div><div class="wb" style="--d:.35s"></div>
+        <div class="wb" style="--d:.5s"></div><div class="wb" style="--d:.45s"></div>
+      </div>
+      <div class="trans-txt" id="trans-txt"><b>Shagun:</b> "...the AI summarization should capture key decisions and action items automatically every five minutes..."</div>
+      <div class="wpm-tag" id="wpm-tag">~148 wpm</div>
+    </div>
+
+    <div class="ctrls">
+      <div class="cb on" id="cb-mic" tabindex="0" role="button" aria-label="Mute microphone" onclick="toggleMic()" onkeydown="if(event.key==='Enter')toggleMic()">🎙<span class="cb-tip">Mute</span></div>
+      <div class="cb on" id="cb-cam" tabindex="0" role="button" aria-label="Turn camera off" onclick="toggleCam()" onkeydown="if(event.key==='Enter')toggleCam()">📷<span class="cb-tip">Camera off</span></div>
+      <div class="csep"></div>
+      <div class="cb" id="cb-rec" tabindex="0" role="button" aria-label="Start recording" onclick="toggleRec()" onkeydown="if(event.key==='Enter')toggleRec()">⏺<span class="cb-tip">Record</span><div class="cb-badge" id="rec-badge">R</div></div>
+      <div class="cb" id="cb-scr" tabindex="0" role="button" aria-label="Share screen" onclick="toggleScr()" onkeydown="if(event.key==='Enter')toggleScr()">🖥<span class="cb-tip">Share screen</span></div>
+      <div class="cb" id="cb-hand" tabindex="0" role="button" aria-label="Raise hand" onclick="raiseHand()" onkeydown="if(event.key==='Enter')raiseHand()">✋<span class="cb-tip">Raise hand</span></div>
+      <div class="cb" tabindex="0" role="button" aria-label="Send a reaction" onclick="sendEmoji()" onkeydown="if(event.key==='Enter')sendEmoji()">😊<span class="cb-tip">React</span></div>
+      <div class="cb" tabindex="0" role="button" aria-label="Start focus mode" onclick="startFocus()" onkeydown="if(event.key==='Enter')startFocus()">🎯<span class="cb-tip">Focus mode</span></div>
+      <div class="csep"></div>
+      <div class="cb" tabindex="0" role="button" aria-label="Open chat" onclick="switchSTab(2)" onkeydown="if(event.key==='Enter')switchSTab(2)">💬<span class="cb-tip">Chat</span><div class="cb-badge" id="chat-badge">2</div></div>
+      <div class="cb" tabindex="0" role="button" aria-label="Open participants list" onclick="switchSTab(3)" onkeydown="if(event.key==='Enter')switchSTab(3)">👥<span class="cb-tip">People</span></div>
+      <div class="cb" tabindex="0" role="button" aria-label="Open meeting report" onclick="openReport()" onkeydown="if(event.key==='Enter')openReport()">📊<span class="cb-tip">Report</span></div>
+      <div class="cb" tabindex="0" role="button" aria-label="Open AI panel" onclick="switchSTab(0)" onkeydown="if(event.key==='Enter')switchSTab(0)">🧠<span class="cb-tip">AI Panel</span></div>
+      <div class="csep"></div>
+      <div class="cb danger" tabindex="0" role="button" aria-label="Leave meeting" onclick="openLeave()" onkeydown="if(event.key==='Enter')openLeave()">📞<span class="cb-tip">Leave</span></div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="stabs" role="tablist">
+      <button class="stab active" role="tab" aria-selected="true" onclick="switchSTab(0,this)">🧠 AI</button>
+      <button class="stab" role="tab" aria-selected="false" onclick="switchSTab(1,this)">📝 Notes</button>
+      <button class="stab" role="tab" aria-selected="false" onclick="switchSTab(2,this)">💬 Chat</button>
+      <button class="stab" role="tab" aria-selected="false" onclick="switchSTab(3,this)">👥 People</button>
+      <button class="stab" role="tab" aria-selected="false" onclick="switchSTab(4,this)">🎙 Coach</button>
+    </div>
+
+    <!-- AI PANEL -->
+    <div class="spanel active" id="sp-0">
+      <div class="acard">
+        <div class="acard-hd"><div class="adot g"></div>Real-time sentiment</div>
+        <div class="a-row">
+          <div class="a-stat"><div class="a-val" style="color:var(--grn)" id="sent-pos">68%</div><div class="a-lbl">Positive</div></div>
+          <div class="a-stat"><div class="a-val" style="color:var(--t3)" id="sent-neu">24%</div><div class="a-lbl">Neutral</div></div>
+          <div class="a-stat"><div class="a-val" style="color:var(--red)" id="sent-neg">8%</div><div class="a-lbl">Negative</div></div>
+        </div>
+        <div class="sentiment-bar"><div class="sb-pos" id="sb-pos" style="flex:68"></div><div class="sb-neu" id="sb-neu" style="flex:24"></div><div class="sb-neg" id="sb-neg" style="flex:8"></div></div>
+        <div class="sent-labels"><span>😊</span><span>😐</span><span>😟</span></div>
+      </div>
+
+      <div class="acard">
+        <div class="acard-hd"><div class="adot"></div>Engagement heatmap (last 12 min)</div>
+        <div class="heatmap" id="heatmap"></div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:6px;font-size:10px;color:var(--t3);">
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,.15)"></div>Low
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,.5)"></div>Mid
+          <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,1)"></div>High
+        </div>
+      </div>
+
+      <div class="acard">
+        <div class="acard-hd"><div class="adot g"></div>Live AI summary <span style="margin-left:auto;font-size:10px;color:var(--acc);cursor:pointer;" onclick="regenerateSummary()">↻ Refresh</span></div>
+        <p id="sum-txt">Discussing IntelliMeet — Month 1 Zidio submission. Stack confirmed: React + Node.js + Claude API + WebRTC. Deadline June 25. Roles assigned.</p>
+      </div>
+
+      <div class="acard">
+        <div class="acard-hd"><div class="adot"></div>Key topics</div>
+        <div class="kw-cloud" id="kw-cloud">
+          <button class="kw" style="background:rgba(99,102,241,.15);color:#818cf8" onclick="askAbout('WebRTC')">WebRTC</button>
+          <button class="kw" style="background:rgba(16,185,129,.12);color:#34d399" onclick="askAbout('Claude API')">Claude API</button>
+          <button class="kw" style="background:rgba(245,158,11,.1);color:#fbbf24" onclick="askAbout('deadline')">Deadline</button>
+          <button class="kw" style="background:rgba(236,72,153,.1);color:#f472b6" onclick="askAbout('deployment')">Deployment</button>
+          <button class="kw" style="background:rgba(6,182,212,.1);color:#22d3ee" onclick="askAbout('Socket.IO')">Socket.IO</button>
+        </div>
+      </div>
+
+      <div class="acard">
+        <div class="acard-hd"><div class="adot a"></div>Action items <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="task-count">0/4 done</span></div>
+        <div id="tasks-container">
+          <div class="atask" data-idx="0"><button class="achk" onclick="tickTask(this,0)" aria-label="Mark task complete"></button><div><div class="atxt">Set up Claude API key &amp; summarization</div><div class="ameta">→ Shagun · Today</div></div></div>
+          <div class="atask" data-idx="1"><button class="achk" onclick="tickTask(this,1)" aria-label="Mark task complete"></button><div><div class="atxt">Implement WebRTC peer connection</div><div class="ameta">→ Aditya · Tomorrow</div></div></div>
+          <div class="atask" data-idx="2"><button class="achk" onclick="tickTask(this,2)" aria-label="Mark task complete"></button><div><div class="atxt">Design scheduling UI + calendar</div><div class="ameta">→ Priya · June 24</div></div></div>
+          <div class="atask" data-idx="3"><button class="achk" onclick="tickTask(this,3)" aria-label="Mark task complete"></button><div><div class="atxt">Record demo video + project report</div><div class="ameta">→ All · June 24</div></div></div>
+        </div>
+        <div class="irow" style="margin-top:8px;margin-bottom:0;">
+          <input class="inp" id="new-task-inp" placeholder="Add a new action item..." onkeydown="if(event.key==='Enter')addTask()">
+          <button class="btn" onclick="addTask()">+</button>
+        </div>
+      </div>
+
+      <div class="stitle">Ask AI about this meeting</div>
+      <div class="irow">
+        <input class="inp" id="ai-q" placeholder="e.g. What was decided about deployment?" onkeydown="if(event.key==='Enter')askAI()">
+        <button class="btn" id="ask-btn" onclick="askAI()">Ask</button>
+      </div>
+      <div class="ai-box" id="ai-ans"><span style="color:var(--t3);font-style:italic;">AI is listening. Ask anything about this meeting.</span></div>
+    </div>
+
+    <!-- NOTES PANEL -->
+    <div class="spanel" id="sp-1">
+      <div class="stitle">Live transcript</div>
+      <div class="tscroll" id="tlist">
+        <div class="tent"><span class="ts">09:01</span><span class="who">Shagun: </span>We have 5 days to submit. Let's confirm the tech stack.</div>
+        <div class="tent"><span class="ts">09:03</span><span class="who">Aditya: </span>I'll own WebRTC video integration and backend Socket.IO.</div>
+        <div class="tent"><span class="ts">09:05</span><span class="who">Priya: </span>Should I use Google Calendar API for scheduling?</div>
+        <div class="tent"><span class="ts">09:07</span><span class="who">Shagun: </span>Yes, and Claude API for AI summarization.</div>
+        <div class="tent"><span class="ts">09:10</span><span class="who">Aditya: </span>What's the deployment target? We need a live URL.</div>
+        <div class="tent"><span class="ts">09:12</span><span class="who">Priya: </span>Vercel is free and instant. I'll handle deployment.</div>
+      </div>
+      <div style="margin-top:12px;">
+        <div class="stitle" style="display:flex;align-items:center;gap:8px;">
+          Private notes
+          <span class="note-saved-badge" id="note-badge">✓ Saved</span>
+        </div>
+        <textarea class="inp" id="note-area" style="width:100%;height:100px;resize:none;" placeholder="Type notes here — they're saved automatically..." aria-label="Private notes" oninput="autoSaveNote()"></textarea>
+        <div class="irow" style="margin-top:6px;margin-bottom:0;">
+          <button class="btn" style="flex:1;" onclick="saveNote()">💾 Save</button>
+          <button class="btn ghost" onclick="clearNote()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div class="spanel" id="sp-2">
+      <div class="chatbox" id="chatbox" aria-live="polite">
+        <div class="bubble them"><div class="bm">Aditya · 09:05</div>Should we use Socket.IO for real-time sync?</div>
+        <div class="bubble me"><div class="bm">You · 09:06</div>Yes — Socket.IO + Node.js is the cleanest.</div>
+        <div class="bubble them"><div class="bm">Priya · 09:08</div>Figma mockup: figma.com/intellimeet 🎨</div>
+        <div class="bubble ai"><div class="bm">🤖 AI · 09:12</div>Reminder: Submission deadline <strong>June 25 at 12 AM</strong> — 3 days left.</div>
+        <div class="bubble them"><div class="bm">Aditya · 09:14</div>I'll push backend skeleton to GitHub tonight!</div>
+      </div>
+      <div class="irow" style="margin-bottom:0;">
+        <input class="inp" id="chat-inp" placeholder="Send a message..." aria-label="Chat message" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+
+    <!-- PEOPLE PANEL -->
+    <div class="spanel" id="sp-3">
+      <div class="stitle">Participants (3)</div>
+      <div class="person">
+        <div class="p-av" style="background:var(--sg-grad);">SG</div>
+        <div><div class="p-nm">Shagun Gupta (You)</div><div class="p-rl">Team Lead</div><div class="vol-bar"><div class="vol-fill" id="vol-sg" style="width:75%"></div></div></div>
+        <div class="pbadge host">Host</div>
+      </div>
+      <div class="person">
+        <div class="p-av" style="background:var(--ar-grad);">AR</div>
+        <div><div class="p-nm">Aditya Rao</div><div class="p-rl">Backend Dev</div><div class="vol-bar"><div class="vol-fill" id="vol-ar" style="width:0%;background:var(--t3)"></div></div></div>
+        <div class="pbadge mut" id="ar-b">Muted</div>
+      </div>
+      <div class="person">
+        <div class="p-av" style="background:var(--pm-grad);">PM</div>
+        <div><div class="p-nm">Priya Mehta</div><div class="p-rl">UI/UX Designer</div><div class="vol-bar"><div class="vol-fill" id="vol-pm" style="width:45%"></div></div></div>
+        <div class="pbadge spk" id="pm-b">Speaking</div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div class="stitle">⚖ Talk time balance</div>
+        <div class="talk-row"><span class="talk-name" style="color:#818cf8">Shagun</span><div class="talk-bar-bg"><div class="talk-bar-fill" id="tt-sg" style="width:48%;background:var(--acc)"></div></div><span class="talk-pct" id="tp-sg">48%</span></div>
+        <div class="talk-row"><span class="talk-name" style="color:#34d399">Aditya</span><div class="talk-bar-bg"><div class="talk-bar-fill" id="tt-ar" style="width:32%;background:var(--grn)"></div></div><span class="talk-pct" id="tp-ar">32%</span></div>
+        <div class="talk-row"><span class="talk-name" style="color:#f472b6">Priya</span><div class="talk-bar-bg"><div class="talk-bar-fill" id="tt-pm" style="width:20%;background:var(--pnk)"></div></div><span class="talk-pct" id="tp-pm">20%</span></div>
+        <div id="balance-tip" style="font-size:11px;color:var(--amb);margin-top:6px;padding:6px 8px;background:rgba(245,158,11,.08);border-radius:6px;border:1px solid rgba(245,158,11,.2);">💡 Priya hasn't spoken much — consider asking for her input</div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div class="stitle">🚨 Interruptions flagged</div>
+        <div class="intlog" id="intlog">
+          <div class="intlog-item"><span class="int-who">Aditya</span><span>interrupted Shagun</span><span class="int-meta">09:04</span></div>
+          <div class="intlog-item"><span class="int-who">Aditya</span><span>interrupted Priya</span><span class="int-meta">09:09</span></div>
+          <div class="intlog-item"><span class="int-who">Priya</span><span>interrupted Aditya</span><span class="int-meta">09:13</span></div>
+        </div>
+        <p class="disclaimer">Based on overlapping speech timing, not meaning — a quick "yes, exactly!" can register the same as a hard interruption.</p>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div class="stitle">🗓 Smart scheduler</div>
+        <div class="slot" tabindex="0" role="button" onclick="selSlot(this)" onkeydown="if(event.key==='Enter')selSlot(this)"><div class="slot-t">Tomorrow · 10:00 AM IST</div><div class="slot-l">Tech integration review</div><div class="slot-a">✓ All 3 available</div></div>
+        <div class="slot" tabindex="0" role="button" onclick="selSlot(this)" onkeydown="if(event.key==='Enter')selSlot(this)"><div class="slot-t">June 24 · 3:00 PM IST</div><div class="slot-l">Final demo rehearsal</div><div class="slot-a">✓ All 3 available</div></div>
+        <div class="slot" tabindex="0" role="button" onclick="selSlot(this)" onkeydown="if(event.key==='Enter')selSlot(this)"><div class="slot-t">June 24 · 5:30 PM IST</div><div class="slot-l">Submission prep</div><div class="slot-a">⚠ 2/3 — Aditya tentative</div></div>
+        <button class="btn" style="width:100%;margin-top:6px;" onclick="confSlot()">📅 Confirm &amp; send invites</button>
+      </div>
+    </div>
+
+    <!-- AI COACH PANEL -->
+    <div class="spanel" id="sp-4">
+      <div class="stitle">🎙 AI Meeting Coach</div>
+      <div class="coach-score">
+        <div class="cscore"><div class="cscore-val" style="color:var(--grn)" id="clarity-score">82</div><div class="cscore-lbl">Clarity</div></div>
+        <div class="cscore"><div class="cscore-val" style="color:var(--acc)" id="pace-score">74</div><div class="cscore-lbl">Pace</div></div>
+        <div class="cscore"><div class="cscore-val" style="color:var(--amb)" id="engage-score">91</div><div class="cscore-lbl">Engagement</div></div>
+        <div class="cscore"><div class="cscore-val" style="color:var(--pnk)" id="confidence-score">79</div><div class="cscore-lbl">Confidence</div></div>
+      </div>
+      <div id="coach-tips">
+        <div class="coach-tip">
+          <div class="coach-tip-hd">💬 Speaking Pace</div>
+          <div class="coach-tip-body">You're speaking at ~148 wpm — slightly fast. Try slowing down during technical explanations to improve comprehension.</div>
+        </div>
+        <div class="coach-tip">
+          <div class="coach-tip-hd">✅ Good: Engagement</div>
+          <div class="coach-tip-body">Great job keeping the room engaged. Your engagement score is high — the team is actively responding to your points.</div>
+        </div>
+        <div class="coach-tip" id="coach-dynamic">
+          <div class="coach-tip-hd">⚡ Live Suggestion</div>
+          <div class="coach-tip-body" id="coach-live-tip">You've been speaking for 3 minutes straight. Consider pausing for questions or inviting Priya to share her thoughts.</div>
+        </div>
+      </div>
+      <div class="acard" style="margin-top:4px;">
+        <div class="acard-hd"><div class="adot r"></div>Filler word tracker</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="mini-bar-row"><span style="width:50px;font-size:11px;">Umm</span><div class="mini-bar-bg"><div class="mini-bar-fill" id="fw-umm" style="width:40%;background:var(--red);opacity:.7"></div></div><span class="talk-pct" id="fwc-umm">4x</span></div>
+          <div class="mini-bar-row"><span style="width:50px;font-size:11px;">Like</span><div class="mini-bar-bg"><div class="mini-bar-fill" id="fw-like" style="width:70%;background:var(--amb);opacity:.7"></div></div><span class="talk-pct" id="fwc-like">7x</span></div>
+          <div class="mini-bar-row"><span style="width:50px;font-size:11px;">Basically</span><div class="mini-bar-bg"><div class="mini-bar-fill" id="fw-basic" style="width:20%;background:var(--acc);opacity:.7"></div></div><span class="talk-pct" id="fwc-basic">2x</span></div>
+          <div class="mini-bar-row"><span style="width:50px;font-size:11px;">Right?</span><div class="mini-bar-bg"><div class="mini-bar-fill" id="fw-right" style="width:30%;background:var(--pnk);opacity:.7"></div></div><span class="talk-pct" id="fwc-right">3x</span></div>
+        </div>
+        <p style="font-size:10px;color:var(--t3);margin-top:6px;">Tip: replace "like" with a brief pause for more deliberate delivery.</p>
+      </div>
+      <div class="acard">
+        <div class="acard-hd"><div class="adot g"></div>Your mood timeline</div>
+        <canvas id="mood-canvas" width="290" height="60" style="width:100%;" role="img" aria-label="Line chart showing mood trending upward across the meeting"></canvas>
+        <div class="mg-label"><span>Start</span><span>Now</span></div>
+      </div>
+      <div class="stitle" style="margin-top:4px;">Ask your coach</div>
+      <div class="irow">
+        <input class="inp" id="coach-q" placeholder="e.g. How can I speak more clearly?" onkeydown="if(event.key==='Enter')askCoach()">
+        <button class="btn" id="coach-btn" onclick="askCoach()">Ask</button>
+      </div>
+      <div class="ai-box" id="coach-ans"><span style="color:var(--t3);font-style:italic;">Your personal AI speaking coach. Ask for real-time advice.</span></div>
+      <p class="disclaimer">Scores are heuristic estimates from speech pace and word choice, not a clinical or professional assessment.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="p-dash">
+  <div class="dash-head">
+    <h1 id="dash-greet">Good afternoon, Shagun 👋</h1>
+    <p>Your IntelliMeet workspace — project submission in <strong style="color:var(--amb)">3 days</strong></p>
+  </div>
+  <div class="dash-grid">
+    <div class="dstat"><div class="dstat-val" style="color:var(--acc)">7</div><div class="dstat-lbl">Meetings this week</div><div class="dstat-sub" style="color:var(--grn)">↑ 2 more than last week</div></div>
+    <div class="dstat"><div class="dstat-val" style="color:var(--grn)">23</div><div class="dstat-lbl">AI summaries</div><div class="dstat-sub" style="color:var(--grn)">↑ 95% self-rated accuracy</div></div>
+    <div class="dstat"><div class="dstat-val" style="color:var(--amb)">14/18</div><div class="dstat-lbl">Action items done</div><div class="dstat-sub" style="color:var(--amb)">77% completion</div></div>
+    <div class="dstat"><div class="dstat-val" style="color:var(--pnk)">4.2h</div><div class="dstat-lbl">Time saved by AI</div><div class="dstat-sub" style="color:var(--grn)">vs. manual note-taking</div></div>
+  </div>
+  <div class="mtable">
+    <div class="mtable-h"><span style="font-weight:600;font-size:13px;">Recent meetings</span><button class="btn ghost" style="font-size:11px;padding:4px 10px;" onclick="goto('meeting',document.querySelector('.nav-item'))">+ New meeting</button></div>
+    <div id="dash-meetings-list">
+      <div class="mrow" onclick="toast('📄 Loading summary...')"><div class="mrow-icon">📋</div><div style="flex:1"><div style="font-weight:600;font-size:12px;">IntelliMeet Planning — Sprint 1</div><div style="font-size:11px;color:var(--t3)">June 20, 2026 · 45 min · 3 participants</div></div><span class="mtag done">Summary ✓</span></div>
+      <div class="mrow" onclick="toast('📄 Loading summary...')"><div class="mrow-icon">🎨</div><div style="flex:1"><div style="font-weight:600;font-size:12px;">UI/UX Review — Wireframes</div><div style="font-size:11px;color:var(--t3)">June 18, 2026 · 30 min</div></div><span class="mtag done">Summary ✓</span></div>
+      <div class="mrow" onclick="toast('📄 Loading summary...')"><div class="mrow-icon">⚙️</div><div style="flex:1"><div style="font-weight:600;font-size:12px;">Backend Architecture Discussion</div><div style="font-size:11px;color:var(--t3)">June 15, 2026 · 60 min</div></div><span class="mtag pend">Processing</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="p-hist">
+  <div class="dash-head"><h1>Meeting history</h1><p>All past meetings with transcripts and AI summaries</p></div>
+  <div class="mtable">
+    <div class="mtable-h"><span style="font-weight:600;font-size:13px;">June 2026</span></div>
+    <div class="mrow"><div class="mrow-icon">📋</div><div style="flex:1"><div style="font-weight:600;font-size:12px;">IntelliMeet Planning Session</div><div style="font-size:11px;color:var(--t3)">June 20 · 45 min</div></div><div style="display:flex;gap:6px;"><button class="btn ghost" style="font-size:10px;padding:3px 9px;" onclick="toast('⬇ Downloaded')">⬇</button><button class="btn" style="font-size:10px;padding:3px 9px;" onclick="toast('📄 Opening...')">View</button></div></div>
+    <div class="mrow"><div class="mrow-icon">🎨</div><div style="flex:1"><div style="font-weight:600;font-size:12px;">UI/UX Review</div><div style="font-size:11px;color:var(--t3)">June 18 · 30 min</div></div><div style="display:flex;gap:6px;"><button class="btn ghost" style="font-size:10px;padding:3px 9px;" onclick="toast('⬇ Downloaded')">⬇</button><button class="btn" style="font-size:10px;padding:3px 9px;" onclick="toast('📄 Opening...')">View</button></div></div>
+  </div>
+  <p class="about-line" id="about-line">IntelliMeet — Month 1 prototype for Zidio internship submission (June 25, 2026). Built with HTML/CSS/JS + Node.js/Express/MongoDB/Socket.IO backend + Claude API (live AI integration, called server-side). Live data shown for mood/sentiment/talk-time/interruptions is simulated to demonstrate intended product behavior; notes, tasks, chat, and transcript are persisted to the backend when connected, and fall back to local simulation in demo mode.</p>
+</div>
+
+<!-- Socket.IO client — served automatically by the backend's Socket.IO server -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+/* =========================================================================
+   IntelliMeet frontend — connects to the IntelliMeet backend (Express +
+   Socket.IO + MongoDB + Claude API) when available, and falls back to a
+   fully local "demo mode" (identical to the original static prototype)
+   when the backend cannot be reached — e.g. opening this file directly
+   with no server running.
+   ========================================================================= */
+
+const API_BASE = '/api';
+let DEMO_MODE = false;          // true once we decide to run without a backend
+let socket = null;
+let authToken = localStorage.getItem('im_token') || null;
+let currentUser = null;         // { id, name, initials, ... }
+let currentMeeting = null;      // meeting document from the backend
+let ROOM_CODE = 'MTG-8472-XQ';  // default / demo room
+
+// ---------- small fetch helper ----------
+async function api(path, { method = 'GET', body } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const res = await fetch(API_BASE + path, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || ('Request failed: ' + res.status));
+  return data;
+}
+
+// ===== AUTH OVERLAY =====
+function setAuthTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('auth-fields-register').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('auth-submit').textContent = tab === 'register' ? 'Create account' : 'Log in';
+  document.getElementById('auth-submit').dataset.mode = tab;
+  document.getElementById('auth-err').textContent = '';
+}
+
+async function submitAuth() {
+  const mode = document.getElementById('auth-submit').dataset.mode || 'login';
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-err');
+  errEl.textContent = '';
+
+  if (!email || !password) { errEl.textContent = 'Email and password are required.'; return; }
+
+  try {
+    let data;
+    if (mode === 'register') {
+      const name = document.getElementById('reg-name').value.trim();
+      const title = document.getElementById('reg-title').value.trim();
+      if (!name) { errEl.textContent = 'Name is required.'; return; }
+      data = await api('/auth/register', { method: 'POST', body: { name, email, password, title } });
+    } else {
+      data = await api('/auth/login', { method: 'POST', body: { email, password } });
+    }
+    authToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem('im_token', authToken);
+    onAuthenticated();
+  } catch (err) {
+    errEl.textContent = err.message || 'Something went wrong.';
+  }
+}
+
+function continueDemoMode() {
+  DEMO_MODE = true;
+  currentUser = { id: 'demo-shagun', name: 'Shagun Gupta', initials: 'SG' };
+  document.getElementById('auth-overlay').classList.add('hide');
+  setConnPill(false, 'Offline / Demo');
+  initTasks();
+  initNotes();
+  startDemoSimulation();
+}
+
+async function tryAutoLogin() {
+  if (!authToken) return showAuthOverlay();
+  try {
+    const data = await api('/auth/me');
+    currentUser = data.user;
+    onAuthenticated();
+  } catch {
+    authToken = null;
+    localStorage.removeItem('im_token');
+    showAuthOverlay();
+  }
+}
+
+function showAuthOverlay() {
+  document.getElementById('auth-overlay').classList.remove('hide');
+}
+
+function logout() {
+  if (DEMO_MODE) { toast('Demo mode — nothing to log out of'); return; }
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('im_token');
+  if (socket) socket.disconnect();
+  showAuthOverlay();
+}
+
+async function onAuthenticated() {
+  document.getElementById('auth-overlay').classList.add('hide');
+  document.getElementById('my-avatar').textContent = currentUser.initials || 'ME';
+  document.getElementById('dash-greet').textContent = `Good day, ${currentUser.name.split(' ')[0]} 👋`;
+  document.getElementById('name-sg').textContent = currentUser.name + ' (You)';
+  document.getElementById('av-sg').textContent = currentUser.initials || 'ME';
+
+  try {
+    await ensureMeeting();
+    connectSocket();
+    await loadMeetingState();
+    setConnPill(true, 'Connected');
+  } catch (err) {
+    console.warn('Backend unreachable, falling back to demo mode:', err.message);
+    DEMO_MODE = true;
+    setConnPill(false, 'Offline / Demo');
+    initTasks();
+    initNotes();
+    startDemoSimulation();
+  }
+}
+
+function setConnPill(online, label) {
+  const pill = document.getElementById('conn-pill');
+  pill.classList.toggle('online', online);
+  pill.classList.toggle('offline', !online);
+  document.getElementById('conn-label').textContent = label;
+}
+
+// ===== MEETING BOOTSTRAP =====
+async function ensureMeeting() {
+  try {
+    const { meeting } = await api('/meetings/room/' + ROOM_CODE);
+    currentMeeting = meeting;
+  } catch {
+    const { meeting } = await api('/meetings', { method: 'POST', body: { title: 'IntelliMeet Planning — Sprint 1' } });
+    currentMeeting = meeting;
+    ROOM_CODE = meeting.roomCode;
+  }
+  document.getElementById('room-tag').textContent = ROOM_CODE;
+}
+
+async function loadMeetingState() {
+  if (!currentMeeting) return;
+  const id = currentMeeting._id;
+
+  try {
+    const { note } = await api(`/meetings/${id}/notes`);
+    document.getElementById('note-area').value = note?.content || '';
+  } catch {}
+
+  try {
+    const { tasks } = await api(`/meetings/${id}/tasks`);
+    if (tasks?.length) renderTasksFromBackend(tasks);
+  } catch {}
+
+  try {
+    const { messages } = await api(`/meetings/${id}/messages`);
+    if (messages?.length) renderChatFromBackend(messages);
+  } catch {}
+
+  if (currentMeeting.summary) document.getElementById('sum-txt').textContent = currentMeeting.summary;
+}
+
+// ===== SOCKET.IO =====
+function connectSocket() {
+  socket = io({ auth: { token: authToken } });
+
+  socket.on('connect', () => {
+    setConnPill(true, 'Connected');
+    socket.emit('join-room', { roomCode: ROOM_CODE });
+  });
+
+  socket.on('disconnect', () => setConnPill(false, 'Reconnecting...'));
+
+  socket.on('user-joined', (u) => toast(`👋 ${u.name} joined`));
+  socket.on('user-left', (u) => toast(`👋 ${u.name} left`));
+
+  socket.on('chat-message', (msg) => {
+    if (msg.sender?.id === currentUser.id) return; // we already rendered our own message optimistically
+    appendChatBubble(msg.sender?.name || 'Someone', msg.text, false);
+    document.getElementById('chat-badge').classList.add('show');
+  });
+
+  socket.on('transcript-line', (entry) => {
+    setTranscriptLine(entry.speaker?.name || 'Someone', entry.text, entry.wpm);
+    appendTranscriptEntry(entry.speaker?.name || 'Someone', entry.text);
+  });
+
+  socket.on('reaction', ({ emoji }) => floatReaction(emoji));
+  socket.on('raise-hand', ({ userId, raised }) => toast(raised ? '✋ Someone raised their hand' : '✋ Hand lowered'));
+  socket.on('task-updated', (task) => upsertTaskUI(task));
+
+  // WebRTC signaling listeners (wired up for real video; mesh peer connections
+  // can be attached here once you call getUserMedia() — see README "Real video" section)
+  socket.on('webrtc-offer', ({ from, offer }) => console.log('Received WebRTC offer from', from, offer));
+  socket.on('webrtc-answer', ({ from, answer }) => console.log('Received WebRTC answer from', from, answer));
+  socket.on('webrtc-ice-candidate', ({ from, candidate }) => console.log('Received ICE candidate from', from, candidate));
+
+  socket.on('error-message', (e) => toast('⚠ ' + e.message));
+}
+
+// ===== PAGE NAV =====
+function goto(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// ===== SIDEBAR TABS =====
+function switchSTab(idx,el){
+  document.querySelectorAll('.spanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.stab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false');});
+  document.getElementById('sp-'+idx).classList.add('active');
+  const tabs=document.querySelectorAll('.stab');
+  if(el){el.classList.add('active');el.setAttribute('aria-selected','true');}
+  else{tabs[idx].classList.add('active');tabs[idx].setAttribute('aria-selected','true');}
+  if(idx===2) document.getElementById('chat-badge').classList.remove('show');
+}
+
+// ===== TIMER =====
+let secs=0;
+setInterval(()=>{
+  secs++;
+  const m=String(Math.floor(secs/60)).padStart(2,'0'),s=String(secs%60).padStart(2,'0');
+  document.getElementById('timer').textContent=m+':'+s;
+},1000);
+
+// ===== LOCAL FALLBACK STORAGE (demo mode only) =====
+const LS = {
+  save(key, val){ try{ localStorage.setItem('im_'+key, JSON.stringify(val)); }catch(e){} },
+  load(key, def=null){ try{ const v=localStorage.getItem('im_'+key); return v!==null?JSON.parse(v):def; }catch(e){ return def; } }
+};
+
+// --- Tasks ---
+let taskStates = [false,false,false,false];
+let taskBackendIds = [null,null,null,null]; // maps index -> backend _id when connected
+
+function initTasks(){
+  taskStates = LS.load('tasks', [false,false,false,false]);
+  const achks = document.querySelectorAll('#tasks-container .achk');
+  achks.forEach((btn,i)=>{
+    if(taskStates[i]){
+      btn.classList.add('done');
+      btn.textContent='✓';
+      btn.parentElement.querySelector('.atxt').classList.add('done');
+    }
+  });
+  updateTaskCount();
+}
+
+function renderTasksFromBackend(tasks){
+  const container = document.getElementById('tasks-container');
+  container.innerHTML = '';
+  taskBackendIds = [];
+  tasks.forEach((t, i) => {
+    taskBackendIds.push(t._id);
+    const div = document.createElement('div');
+    div.className = 'atask';
+    div.dataset.idx = i;
+    div.innerHTML = `
+      <button class="achk ${t.done ? 'done' : ''}" onclick="tickTask(this,${i})" aria-label="Mark task complete">${t.done ? '✓' : ''}</button>
+      <div>
+        <div class="atxt ${t.done ? 'done' : ''}">${escapeHtml(t.text)}</div>
+        <div class="ameta">→ ${t.assignee?.name || 'Unassigned'}${t.dueDate ? ' · ' + new Date(t.dueDate).toLocaleDateString() : ''}</div>
+      </div>`;
+    container.appendChild(div);
+  });
+  updateTaskCount();
+}
+
+function upsertTaskUI(task){
+  // Minimal live-update: if the task is currently rendered, refresh its done state.
+  const idx = taskBackendIds.indexOf(task._id);
+  if (idx === -1) return;
+  const row = document.querySelector(`.atask[data-idx="${idx}"]`);
+  if (!row) return;
+  const chk = row.querySelector('.achk');
+  chk.classList.toggle('done', task.done);
+  chk.textContent = task.done ? '✓' : '';
+  row.querySelector('.atxt').classList.toggle('done', task.done);
+  updateTaskCount();
+}
+
+function updateTaskCount(){
+  const achks = document.querySelectorAll('#tasks-container .achk');
+  const done = Array.from(achks).filter(b => b.classList.contains('done')).length;
+  document.getElementById('task-count').textContent = `${done}/${achks.length} done`;
+}
+
+async function tickTask(el, idx){
+  el.classList.toggle('done');
+  el.parentElement.querySelector('.atxt').classList.toggle('done');
+  el.textContent = el.classList.contains('done') ? '✓' : '';
+  const isDone = el.classList.contains('done');
+  updateTaskCount();
+  toast(isDone ? '✅ Task saved!' : '↩ Reopened');
+
+  if (DEMO_MODE) {
+    taskStates[idx] = isDone;
+    LS.save('tasks', taskStates);
+    return;
+  }
+
+  try {
+    const backendId = taskBackendIds[idx];
+    if (backendId) {
+      const { task } = await api(`/tasks/${backendId}`, { method: 'PATCH', body: { done: isDone } });
+      socket?.emit('task-updated', task);
+    }
+  } catch (err) {
+    toast('⚠ Could not save task: ' + err.message);
+  }
+}
+
+async function addTask(){
+  const inp = document.getElementById('new-task-inp');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+
+  if (DEMO_MODE || !currentMeeting) {
+    const container = document.getElementById('tasks-container');
+    const idx = container.children.length;
+    const div = document.createElement('div');
+    div.className = 'atask';
+    div.dataset.idx = idx;
+    div.innerHTML = `<button class="achk" onclick="tickTask(this,${idx})" aria-label="Mark task complete"></button><div><div class="atxt">${escapeHtml(text)}</div><div class="ameta">→ Unassigned</div></div>`;
+    container.appendChild(div);
+    updateTaskCount();
+    toast('✅ Task added (demo mode, not persisted)');
+    return;
+  }
+
+  try {
+    const { task } = await api(`/meetings/${currentMeeting._id}/tasks`, { method: 'POST', body: { text } });
+    taskBackendIds.push(task._id);
+    const container = document.getElementById('tasks-container');
+    const idx = container.children.length;
+    const div = document.createElement('div');
+    div.className = 'atask';
+    div.dataset.idx = idx;
+    div.innerHTML = `<button class="achk" onclick="tickTask(this,${idx})" aria-label="Mark task complete"></button><div><div class="atxt">${escapeHtml(task.text)}</div><div class="ameta">→ Unassigned</div></div>`;
+    container.appendChild(div);
+    updateTaskCount();
+    toast('✅ Task added');
+  } catch (err) {
+    toast('⚠ Could not add task: ' + err.message);
+  }
+}
+
+// --- Notes ---
+let noteTimer=null;
+function initNotes(){
+  const saved=LS.load('notes','');
+  if(saved) document.getElementById('note-area').value=saved;
+}
+function autoSaveNote(){
+  clearTimeout(noteTimer);
+  noteTimer=setTimeout(saveNote, 800);
+}
+async function saveNote(showToast){
+  const v=document.getElementById('note-area').value;
+  const badge=document.getElementById('note-badge');
+
+  if (DEMO_MODE || !currentMeeting) {
+    LS.save('notes', v);
+  } else {
+    try {
+      await api(`/meetings/${currentMeeting._id}/notes`, { method: 'PUT', body: { content: v } });
+    } catch (err) {
+      toast('⚠ Could not save note: ' + err.message);
+      return;
+    }
+  }
+
+  badge.classList.add('show');
+  setTimeout(()=>badge.classList.remove('show'),2000);
+  if (showToast !== false) toast('💾 Notes saved!');
+}
+function clearNote(){
+  document.getElementById('note-area').value='';
+  saveNote(false);
+  toast('🗑 Cleared');
+}
+
+// ===== CONTROLS =====
+function toggleMic(){
+  const c=document.getElementById('cb-mic');c.classList.toggle('on');const on=c.classList.contains('on');
+  c.querySelector('.cb-tip').textContent=on?'Mute':'Unmute';
+  c.setAttribute('aria-label',on?'Mute microphone':'Unmute microphone');
+  document.querySelectorAll('.wb').forEach(w=>w.classList.toggle('off',!on));
+  socket?.emit('media-state-change', { kind: 'mic', enabled: on });
+  toast(on?'🎙 Mic on':'🔇 Mic muted');
+}
+function toggleCam(){
+  const c=document.getElementById('cb-cam');c.classList.toggle('on');const on=c.classList.contains('on');
+  c.querySelector('.cb-tip').textContent=on?'Camera off':'Camera on';
+  c.setAttribute('aria-label',on?'Turn camera off':'Turn camera on');
+  document.getElementById('t-sg').style.opacity=on?'1':'0.55';
+  socket?.emit('media-state-change', { kind: 'cam', enabled: on });
+  toast(on?'📷 Camera on':'📷 Camera off');
+}
+function toggleRec(){
+  const c=document.getElementById('cb-rec');c.classList.toggle('rec');const on=c.classList.contains('rec');
+  document.getElementById('rec-badge').classList.toggle('show',on);
+  c.setAttribute('aria-label',on?'Stop recording':'Start recording');
+  toast(on?'⏺ Recording started':'⏹ Recording saved');
+}
+function toggleScr(){
+  const c=document.getElementById('cb-scr');c.classList.toggle('on');
+  socket?.emit('media-state-change', { kind: 'screen', enabled: c.classList.contains('on') });
+  toast(c.classList.contains('on')?'🖥 Screen sharing on':'🖥 Screen sharing off');
+}
+let handUp=false;
+function raiseHand(){
+  handUp=!handUp;
+  document.getElementById('cb-hand').classList.toggle('on',handUp);
+  socket?.emit('raise-hand', { raised: handUp });
+  toast(handUp?'✋ Hand raised':'✋ Hand lowered');
+}
+function inviteP(){
+  const link=`${location.origin}/join/${ROOM_CODE}`;
+  if(navigator.clipboard){navigator.clipboard.writeText(link).catch(()=>{});}
+  toast('🔗 Invite link copied!');
+}
+
+// ===== EMOJI REACTIONS =====
+const EMOJIS=['👍','🎉','❤️','😂','🔥','🙌','💡','👏','🚀','✨'];
+function sendEmoji(){
+  const e=EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  floatReaction(e);
+  socket?.emit('reaction', { emoji: e });
+  toast(e+' Reaction sent!');
+}
+function floatReaction(e){
+  const el=document.createElement('div');
+  el.className='reaction-float';el.textContent=e;
+  const vg=document.querySelector('.vgrid').getBoundingClientRect();
+  el.style.cssText=`left:${vg.left+Math.random()*vg.width}px;top:${vg.bottom-60}px;`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2600);
+}
+
+// ===== FOCUS MODE =====
+let focusInterval,focusLeft=300;
+function startFocus(){
+  focusLeft=300;
+  document.getElementById('focus-overlay').classList.add('show');
+  document.getElementById('cb-mic').classList.remove('on');
+  toast('🎯 Focus mode started — mic paused');
+  clearInterval(focusInterval);
+  focusInterval=setInterval(()=>{
+    focusLeft--;
+    const m=String(Math.floor(focusLeft/60)).padStart(2,'0'),s=String(focusLeft%60).padStart(2,'0');
+    document.getElementById('focus-clock').textContent=m+':'+s;
+    if(focusLeft<=0) endFocus();
+  },1000);
+}
+function endFocus(){
+  clearInterval(focusInterval);
+  document.getElementById('focus-overlay').classList.remove('show');
+  document.getElementById('cb-mic').classList.add('on');
+  toast('✅ Focus mode ended — mic restored');
+}
+
+// ===== LEAVE / REPORT =====
+function openLeave(){document.getElementById('leave-modal').classList.add('show');}
+function closeLeave(){document.getElementById('leave-modal').classList.remove('show');}
+async function confirmLeave(){
+  closeLeave();
+  toast('👋 Left — summary saved!');
+  if (!DEMO_MODE && currentMeeting) {
+    try { await api(`/meetings/${currentMeeting._id}/end`, { method: 'POST' }); } catch {}
+    socket?.emit('leave-room');
+  }
+  setTimeout(()=>goto('dash',document.querySelectorAll('.nav-item')[1]),900);
+}
+function openReport(){document.getElementById('report-modal').classList.add('show');}
+function closeReport(){document.getElementById('report-modal').classList.remove('show');}
+
+// ===== PIN TILE =====
+function pinTile(t,name){
+  const was=t.classList.contains('pin');
+  document.querySelectorAll('.vtile').forEach(v=>v.classList.remove('pin'));
+  if(!was){t.classList.add('pin');toast('📌 '+name+' pinned');}
+  else toast('📌 Unpinned');
+}
+
+// ===== CHAT =====
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+}
+function appendChatBubble(name, text, isMe){
+  const box=document.getElementById('chatbox');
+  const now=new Date(),ts=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  const b=document.createElement('div');b.className='bubble '+(isMe?'me':'them');
+  const bm=document.createElement('div');bm.className='bm';bm.textContent=`${isMe?'You':name} · ${ts}`;
+  b.appendChild(bm);b.appendChild(document.createTextNode(text));
+  box.appendChild(b);box.scrollTop=box.scrollHeight;
+}
+function renderChatFromBackend(messages){
+  const box=document.getElementById('chatbox');
+  box.innerHTML = '';
+  messages.forEach(m => appendChatBubble(m.sender?.name, m.text, m.sender?.id === currentUser.id || m.sender?._id === currentUser.id));
+}
+async function sendChat(){
+  const inp=document.getElementById('chat-inp'),msg=inp.value.trim();
+  if(!msg)return;
+  appendChatBubble('You', msg, true);
+  inp.value='';
+
+  if (DEMO_MODE || !socket || !currentMeeting) {
+    const replies=['Got it! 👍','Makes sense.','On it!','Perfect!','🙌 Agreed!'];
+    setTimeout(()=>{
+      appendChatBubble('Aditya', replies[Math.floor(Math.random()*replies.length)], false);
+      document.getElementById('chat-badge').classList.add('show');
+    },1400);
+    return;
+  }
+
+  socket.emit('chat-message', { meetingId: currentMeeting._id, text: msg });
+}
+
+// ===== SCHEDULER =====
+function selSlot(el){document.querySelectorAll('.slot').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');toast('✓ Slot selected');}
+function confSlot(){const s=document.querySelector('.slot.sel');if(!s){toast('⚠ Select a slot first');return;}toast('📅 Scheduled! Invites sent.');s.querySelector('.slot-a').textContent='✅ Confirmed';}
+
+// ===== ASK AI (now calls the backend, which calls Claude server-side) =====
+function localAIFallback(q){
+  const l=q.toLowerCase();
+  if(l.includes('deploy')) return 'The team decided on Vercel for deployment — free and deploys instantly from GitHub.';
+  if(l.includes('webrtc')||l.includes('video')) return 'Aditya owns the WebRTC peer connection and Socket.IO backend for real-time sync.';
+  if(l.includes('claude')||l.includes('summar')) return 'Claude API was chosen for AI summarization — generating the live meeting summary and action items.';
+  if(l.includes('deadline')||l.includes('due')) return 'Submission deadline is June 25, 2026 at 12:00 AM. Full demo target: June 24 EOD.';
+  if(l.includes('socket')) return 'Socket.IO runs on port 3001, separate from the main Express API, for real-time chat and presence sync.';
+  return 'Stack confirmed: React + Node.js + Claude API + WebRTC. Vercel deployment. Deadline June 25.';
+}
+
+async function askAI(){
+  const qInput=document.getElementById('ai-q');
+  const q=qInput.value.trim();if(!q)return;
+  const btn=document.getElementById('ask-btn'),out=document.getElementById('ai-ans');
+  btn.disabled=true;btn.textContent='...';
+  out.innerHTML='<span class="thinking-dots">Analyzing</span>';
+  qInput.value='';
+
+  if (DEMO_MODE || !currentMeeting) {
+    setTimeout(()=>{ out.textContent = localAIFallback(q); btn.disabled=false; btn.textContent='Ask'; }, 500);
+    return;
+  }
+
+  try{
+    const { answer } = await api(`/meetings/${currentMeeting._id}/ai/ask`, { method: 'POST', body: { question: q } });
+    out.textContent = answer || localAIFallback(q);
+  }catch(e){
+    out.textContent = localAIFallback(q);
+  }
+  btn.disabled=false;btn.textContent='Ask';
+}
+function askAbout(kw){document.getElementById('ai-q').value='What was discussed about '+kw+'?';switchSTab(0);askAI();}
+
+async function regenerateSummary(){
+  if (DEMO_MODE || !currentMeeting) { toast('⚠ Connect to the backend to regenerate the AI summary'); return; }
+  toast('🧠 Regenerating summary...');
+  try {
+    const { summary } = await api(`/meetings/${currentMeeting._id}/ai/summarize`, { method: 'POST' });
+    document.getElementById('sum-txt').textContent = summary;
+    toast('✅ Summary updated');
+  } catch (err) {
+    toast('⚠ ' + err.message);
+  }
+}
+
+// ===== ASK COACH =====
+const COACH_FALLBACKS=['Try pausing for a full second before your next sentence instead of saying "umm" — silence reads as confidence.','Your pace is a touch fast for technical points. Slow down 15% whenever you introduce a new term.','Swap "like" for a short breath — your most frequent filler this session.','Your engagement score is strong — keep checking in with short questions to maintain it.'];
+function localCoachFallback(){return COACH_FALLBACKS[Math.floor(Math.random()*COACH_FALLBACKS.length)];}
+
+async function askCoach(){
+  const qInput=document.getElementById('coach-q');
+  const q=qInput.value.trim();if(!q)return;
+  const btn=document.getElementById('coach-btn'),out=document.getElementById('coach-ans');
+  btn.disabled=true;btn.textContent='...';
+  out.innerHTML='<span class="thinking-dots">Coaching</span>';
+  qInput.value='';
+
+  if (DEMO_MODE) {
+    setTimeout(()=>{ out.textContent = localCoachFallback(); btn.disabled=false; btn.textContent='Ask'; }, 500);
+    return;
+  }
+
+  try{
+    const wpm = parseInt((document.getElementById('wpm-tag').textContent.match(/\d+/) || [148])[0], 10);
+    const { answer } = await api('/ai/coach', {
+      method: 'POST',
+      body: {
+        question: q,
+        wpm,
+        clarityScore: parseInt(document.getElementById('clarity-score').textContent, 10),
+        fillerWords: {
+          umm: parseInt(document.getElementById('fwc-umm').textContent, 10),
+          like: parseInt(document.getElementById('fwc-like').textContent, 10),
+        },
+      },
+    });
+    out.textContent = answer || localCoachFallback();
+  }catch(e){
+    out.textContent = localCoachFallback();
+  }
+  btn.disabled=false;btn.textContent='Ask';
+}
+
+// ===== LIVE TRANSCRIPT (shared helpers used by both backend + demo paths) =====
+function setTranscriptLine(who, text, wpm){
+  const tt=document.getElementById('trans-txt');
+  tt.innerHTML='';
+  const b=document.createElement('b');b.textContent=who+':';
+  tt.appendChild(b);tt.appendChild(document.createTextNode(' "'+text+'"'));
+  if (wpm) document.getElementById('wpm-tag').textContent = '~'+wpm+' wpm';
+}
+function appendTranscriptEntry(who, text){
+  const list=document.getElementById('tlist');
+  const now=new Date();
+  const d=document.createElement('div');d.className='tent';
+  const ts=document.createElement('span');ts.className='ts';ts.textContent=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  const whoEl=document.createElement('span');whoEl.className='who';whoEl.textContent=who+': ';
+  d.appendChild(ts);d.appendChild(whoEl);d.appendChild(document.createTextNode(text));
+  list.appendChild(d);list.scrollTop=list.scrollHeight;
+}
+
+// ===== DEMO-MODE SIMULATION (only runs when no backend is reachable) =====
+function startDemoSimulation(){
+  const LINES=[
+    {who:'Priya',text:'I think Tailwind CSS is the right choice — fast to build with.'},
+    {who:'Aditya',text:'Socket.IO on port 3001, separate from the main Express API.'},
+    {who:'Shagun',text:'Priya, can you have the dashboard mockup ready by tonight?'},
+    {who:'Priya',text:'Yes, I\'ll share it in the group chat by 8 PM.'},
+    {who:'Aditya',text:'I\'ll push the backend skeleton to GitHub tonight.'},
+    {who:'Shagun',text:'Full demo target: June 24 EOD. Let\'s all commit to that.'},
+  ];
+  const WPMS=[138,152,141,163,127];
+  let li=0;
+  setInterval(()=>{
+    const l=LINES[li%LINES.length];
+    setTranscriptLine(l.who, l.text, WPMS[li%WPMS.length]);
+    appendTranscriptEntry(l.who, l.text);
+    li++;
+  },7000);
+
+  const SUMS=['Discussing IntelliMeet — Month 1 Zidio submission. Stack confirmed: React + Node.js + Claude API + WebRTC. Deadline June 25.','Tailwind CSS confirmed for frontend. Socket.IO port 3001. GitHub repo setup tonight by Aditya.','Deployment: Vercel. Demo deadline: June 24 EOD. Full report same day. Team is on track.'];
+  let si=0;
+  setInterval(()=>{si=(si+1)%SUMS.length;document.getElementById('sum-txt').textContent=SUMS[si];},16000);
+
+  setInterval(()=>{
+    const pos=60+Math.floor(Math.random()*20),neg=5+Math.floor(Math.random()*10),neu=100-pos-neg;
+    document.getElementById('sent-pos').textContent=pos+'%';
+    document.getElementById('sent-neg').textContent=neg+'%';
+    document.getElementById('sent-neu').textContent=neu+'%';
+    document.getElementById('sb-pos').style.flex=pos;
+    document.getElementById('sb-neu').style.flex=neu;
+    document.getElementById('sb-neg').style.flex=neg;
+  },8000);
+
+  setInterval(()=>{
+    document.getElementById('vol-sg').style.width=(55+Math.random()*40)+'%';
+    document.getElementById('vol-pm').style.width=(20+Math.random()*50)+'%';
+  },1000);
+
+  let bti=0;
+  setInterval(()=>{
+    bti=(bti+1)%2;
+    const pmb=document.getElementById('pm-b'),arb=document.getElementById('ar-b');
+    if(bti===0){pmb.className='pbadge spk';pmb.textContent='Speaking';arb.className='pbadge mut';arb.textContent='Muted';}
+    else{pmb.className='pbadge mut';pmb.textContent='Muted';arb.className='pbadge spk';arb.textContent='Speaking';}
+    document.getElementById('t-pm').classList.toggle('speak',bti===0);
+    document.getElementById('t-ar').classList.toggle('speak',bti===1);
+    document.getElementById('ar-mute').style.display=bti===0?'block':'none';
+  },5000);
+
+  const MOODS_SG=[{e:'😊',l:'Engaged',c:'rgba(16,185,129,.2)',t:'#34d399'},{e:'🤩',l:'Excited',c:'rgba(99,102,241,.2)',t:'#818cf8'},{e:'💪',l:'Confident',c:'rgba(6,182,212,.15)',t:'#22d3ee'}];
+  const MOODS_AR=[{e:'🤔',l:'Thinking',c:'rgba(245,158,11,.15)',t:'#fbbf24'},{e:'😐',l:'Neutral',c:'rgba(90,102,128,.15)',t:'#8899bb'},{e:'💡',l:'Curious',c:'rgba(99,102,241,.15)',t:'#818cf8'}];
+  const MOODS_PM=[{e:'💡',l:'Excited',c:'rgba(236,72,153,.12)',t:'#f472b6'},{e:'😊',l:'Positive',c:'rgba(16,185,129,.15)',t:'#34d399'},{e:'🎨',l:'Creative',c:'rgba(245,158,11,.12)',t:'#fbbf24'}];
+  let mi=0;
+  setInterval(()=>{
+    mi=(mi+1)%3;
+    const moodEl=(id,m)=>{const el=document.getElementById(id);el.textContent=m.e+' '+m.l;el.style.background=m.c;el.style.color=m.t;};
+    moodEl('mood-sg',MOODS_SG[mi]);moodEl('mood-ar',MOODS_AR[mi]);moodEl('mood-pm',MOODS_PM[mi]);
+  },6000);
+
+  setInterval(()=>{
+    const sg=44+Math.floor(Math.random()*10),ar=28+Math.floor(Math.random()*10),pm=100-sg-ar;
+    document.getElementById('tt-sg').style.width=sg+'%';document.getElementById('tp-sg').textContent=sg+'%';
+    document.getElementById('tt-ar').style.width=ar+'%';document.getElementById('tp-ar').textContent=ar+'%';
+    document.getElementById('tt-pm').style.width=pm+'%';document.getElementById('tp-pm').textContent=pm+'%';
+    const tips=['💡 Priya hasn\'t spoken much — invite her input','⚖ Talk time is balanced — great meeting!','💡 Aditya is quiet — check if he has questions'];
+    document.getElementById('balance-tip').textContent=tips[Math.floor(Math.random()*tips.length)];
+  },10000);
+
+  const INT_MSGS=[{who:'Shagun',target:'Aditya'},{who:'Aditya',target:'Priya'},{who:'Priya',target:'Shagun'}];
+  setInterval(()=>{
+    const m=INT_MSGS[Math.floor(Math.random()*INT_MSGS.length)];
+    const log=document.getElementById('intlog');
+    const d=document.createElement('div');d.className='intlog-item';
+    const now=new Date(),ts=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    const who=document.createElement('span');who.className='int-who';who.textContent=m.who;
+    const meta=document.createElement('span');meta.className='int-meta';meta.textContent=ts;
+    d.appendChild(who);d.appendChild(document.createTextNode(' interrupted '+m.target));d.appendChild(meta);
+    log.appendChild(d);log.scrollTop=log.scrollHeight;
+  },18000);
+
+  const COACH_TIPS=['You\'ve been speaking for 3 minutes straight. Pause and invite questions.','Your pace is picking up — slow down for technical points.','Good energy! Your engagement score just went up to 91.','Try fewer filler words — replace "like" with a brief pause.','Great point just now — your confidence score improved!'];
+  let cti=0;
+  setInterval(()=>{
+    cti=(cti+1)%COACH_TIPS.length;
+    document.getElementById('coach-live-tip').textContent=COACH_TIPS[cti];
+    document.getElementById('clarity-score').textContent=78+Math.floor(Math.random()*12);
+    document.getElementById('pace-score').textContent=68+Math.floor(Math.random()*14);
+    document.getElementById('engage-score').textContent=85+Math.floor(Math.random()*10);
+    document.getElementById('confidence-score').textContent=72+Math.floor(Math.random()*14);
+  },9000);
+
+  let fwUmm=4,fwLike=7,fwBasic=2,fwRight=3;
+  setInterval(()=>{
+    if(Math.random()>.6) fwUmm++;if(Math.random()>.4) fwLike++;
+    if(Math.random()>.8) fwBasic++;if(Math.random()>.7) fwRight++;
+    document.getElementById('fwc-umm').textContent=fwUmm+'x';document.getElementById('fwc-like').textContent=fwLike+'x';
+    document.getElementById('fwc-basic').textContent=fwBasic+'x';document.getElementById('fwc-right').textContent=fwRight+'x';
+    const max=Math.max(fwUmm,fwLike,fwBasic,fwRight,1);
+    document.getElementById('fw-umm').style.width=(fwUmm/max*100)+'%';document.getElementById('fw-like').style.width=(fwLike/max*100)+'%';
+    document.getElementById('fw-basic').style.width=(fwBasic/max*100)+'%';document.getElementById('fw-right').style.width=(fwRight/max*100)+'%';
+  },12000);
+}
+
+// ===== MOOD CANVAS =====
+function drawMoodChart(){
+  const canvas=document.getElementById('mood-canvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d');const w=canvas.width,h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const pts=[0.6,0.7,0.65,0.8,0.75,0.85,0.9,0.82,0.88,0.92,0.85,0.9,0.87,0.93,0.88];
+  ctx.beginPath();ctx.strokeStyle='#6366F1';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';
+  pts.forEach((p,i)=>{const x=(i/(pts.length-1))*w,y=h-(p*h*0.85)-4;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();
+  ctx.fillStyle='rgba(99,102,241,0.08)';ctx.fill();
+  pts.forEach((p,i)=>{
+    const x=(i/(pts.length-1))*w,y=h-(p*h*0.85)-4;
+    ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fillStyle='#6366F1';ctx.fill();
+  });
+}
+drawMoodChart();
+
+// ===== HEATMAP =====
+function buildHeatmap(){
+  const hm=document.getElementById('heatmap');hm.innerHTML='';
+  for(let i=0;i<36;i++){
+    const cell=document.createElement('button');cell.className='hm-cell';cell.type='button';
+    const intensity=Math.random();
+    cell.style.background=`rgba(99,102,241,${0.1+intensity*0.9})`;
+    const pct=Math.floor(intensity*100);
+    cell.setAttribute('aria-label',`Engagement at minute ${Math.floor(i/3)}: ${pct}%`);
+    cell.title=`Engagement: ${pct}%`;
+    cell.onclick=()=>toast(`Engagement at min ${Math.floor(i/3)}: ${pct}%`);
+    hm.appendChild(cell);
+  }
+}
+buildHeatmap();
+setInterval(buildHeatmap,20000);
+
+// ===== TOAST =====
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ===== BOOTSTRAP =====
+setAuthTab('login');
+tryAutoLogin();
+</script>
+</body>
+</html>
