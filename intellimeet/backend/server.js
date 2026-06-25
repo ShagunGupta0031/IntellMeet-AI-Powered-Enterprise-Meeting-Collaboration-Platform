@@ -13,9 +13,14 @@ async function start() {
 
   const server = http.createServer(app);
 
+  const allowedOrigins = (process.env.CLIENT_URL || '')
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean);
+
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || '*',
+      origin: allowedOrigins.length > 0 ? allowedOrigins : '*',
       credentials: true,
     },
   });
